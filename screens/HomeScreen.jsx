@@ -7,43 +7,61 @@ import {
   Image,
   TouchableOpacity,
   Platform,
+  ActivityIndicator,
 } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { EvilIcons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
-
-const DATA = [
-  {
-    id: "1",
-    title: "First Item",
-  },
-  {
-    id: "2",
-    title: "Second Item",
-  },
-  {
-    id: "3",
-    title: "Third Item",
-  },
-  {
-    id: "4",
-    title: "Fourth Item",
-  },
-  {
-    id: "5",
-    title: "Fifth Item",
-  },
-  {
-    id: "6",
-    title: "Sixth Item",
-  },
-  {
-    id: "9",
-    title: "Seventh Item",
-  },
-];
+import axios from "axios";
+import { formatDistanceToNowStrict } from "date-fns";
+import locale from "date-fns/locale/en-US";
+import formatDistance from "../helpers/formateDateToNowStrict";
 
 const HomeScreen = ({ navigation }) => {
+  const [data, setData] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
+
+  useEffect(() => {
+    getAllTweets();
+  }, [page]);
+
+  function getAllTweets() {
+    axios
+      .get(`https://twitter-clone.kalpvaig.com/api/tweets/?page=${page}`)
+      .then((response) => {
+        if (page === 1) {
+          setData(response.data.data);
+        } else {
+          setData([...data, ...response.data.data]);
+        }
+        setIsLoading(false);
+        setIsRefreshing(false);
+
+        if (!response.data.next_page_url) {
+          setIsAtEndOfScrolling(true);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+        setIsLoading(false);
+        setIsRefreshing(false);
+      });
+  }
+
+  function handleRefresh() {
+    setPage(1);
+    isAtEndOfScrolling(false);
+    setIsRefreshing(true);
+    getAllTweets();
+  }
+
+  function handleEnd() {
+    setPage(page + 1);
+  }
+
   const goToPRofile = () => {
     navigation.navigate("Profile");
   };
@@ -56,34 +74,31 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate("New Tweet");
   };
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item: tweet }) => (
     <View style={styles.tweetContainer}>
       <TouchableOpacity onPress={() => goToPRofile()}>
-        <Image
-          style={styles.avatar}
-          source={{ uri: "https://reactnative.dev/img/tiny_logo.png" }}
-        />
+        <Image style={styles.avatar} source={{ uri: tweet.user.avatar }} />
       </TouchableOpacity>
       <View style={{ flex: 1 }}>
         <TouchableOpacity style={styles.flexRow} onPress={() => goToPRofile()}>
           <Text numberOfLines={1} style={styles.tweetName}>
-            {item.title}
+            {tweet.user.name}
           </Text>
           <Text numberOfLines={1} style={[styles.tweetHandle, styles.textGray]}>
-            @itsme
+            @{tweet.user.username}
           </Text>
           <Text>&middot;</Text>
           <Text numberOfLines={1} style={[styles.tweetHandle, styles.textGray]}>
-            9m
+            {formatDistanceToNowStrict(new Date(tweet.created_at), {
+              locale: {
+                ...locale,
+                formatDistance,
+              },
+            })}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => goToTweet()}>
-          <Text style={styles.tweetText}>
-            Lorem Ipsum is simply dummy text of the printing and typesetting
-            industry. Lorem Ipsum has been the industry's standard dummy text
-            ever since the 1500s, when an unknown printer took a galley of type
-            and scrambled it to make a type specimen book.
-          </Text>
+          <Text style={styles.tweetText}>{tweet.body}</Text>
         </TouchableOpacity>
         <View style={styles.tweetEngCon}>
           <TouchableOpacity style={[styles.flexRow, styles.tweetEngagement]}>
@@ -128,14 +143,27 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={DATA}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => (
-          <View style={styles.tweetSeperator}></View>
-        )}
-      />
+      {isLoading ? (
+        <ActivityIndicator size="large" color="gray" />
+      ) : (
+        <FlatList
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          ItemSeparatorComponent={() => (
+            <View style={styles.tweetSeperator}></View>
+          )}
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          onEndReached={handleEnd}
+          onEndReachedThreshold={0}
+          ListFooterComponent={() =>
+            !isAtEndOfScrolling && (
+              <ActivityIndicator size="large" color="gray" />
+            )
+          }
+        />
+      )}
       <TouchableOpacity
         style={styles.floatingButton}
         onPress={() => goToNewTweet()}
