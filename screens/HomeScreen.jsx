@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  Button,
   FlatList,
   StyleSheet,
   Image,
@@ -12,10 +11,11 @@ import {
 import React, { useEffect, useState } from "react";
 import { EvilIcons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
-import axios from "axios";
 import { formatDistanceToNowStrict } from "date-fns";
 import locale from "date-fns/locale/en-US";
 import formatDistance from "../helpers/formateDateToNowStrict";
+import screenNames from "../constants/screenNames";
+import axiosConfig from "../helpers/axiosConfig";
 
 const HomeScreen = ({ navigation }) => {
   const [data, setData] = useState("");
@@ -29,8 +29,8 @@ const HomeScreen = ({ navigation }) => {
   }, [page]);
 
   function getAllTweets() {
-    axios
-      .get(`https://twitter-clone.kalpvaig.com/api/tweets/?page=${page}`)
+    axiosConfig
+      .get(`/tweets/?page=${page}`)
       .then((response) => {
         if (page === 1) {
           setData(response.data.data);
@@ -53,7 +53,7 @@ const HomeScreen = ({ navigation }) => {
 
   function handleRefresh() {
     setPage(1);
-    isAtEndOfScrolling(false);
+    setIsAtEndOfScrolling(false);
     setIsRefreshing(true);
     getAllTweets();
   }
@@ -63,15 +63,17 @@ const HomeScreen = ({ navigation }) => {
   }
 
   const goToPRofile = () => {
-    navigation.navigate("Profile");
+    navigation.navigate(screenNames.PROFILE_SCREEN);
   };
 
-  const goToTweet = () => {
-    navigation.navigate("Tweet");
+  const goToTweet = (tweetId) => {
+    navigation.navigate(screenNames.SINGLE_TWEET_SCREEN, {
+      tweetId: tweetId,
+    });
   };
 
   const goToNewTweet = () => {
-    navigation.navigate("New Tweet");
+    navigation.navigate(screenNames.NEW_TWEET_SCREEN);
   };
 
   const renderItem = ({ item: tweet }) => (
@@ -97,7 +99,7 @@ const HomeScreen = ({ navigation }) => {
             })}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => goToTweet()}>
+        <TouchableOpacity onPress={() => goToTweet(tweet.id)}>
           <Text style={styles.tweetText}>{tweet.body}</Text>
         </TouchableOpacity>
         <View style={styles.tweetEngCon}>
