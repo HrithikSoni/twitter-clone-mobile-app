@@ -1,12 +1,33 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import React, { useState } from "react";
 import { TextInput } from "react-native-gesture-handler";
+import axiosConfig from "../helpers/axiosConfig";
+import screenNames from "../constants/screenNames";
 
 export default function NewTweetScreeen({ navigation }) {
+  const [isLoading, setIsLoading] = useState(false);
   const [input, setInput] = useState("");
 
-  function goToHome() {
-    navigation.navigate("Tab");
+  function sendTweet() {
+    axiosConfig
+      .post(`/tweets`, {
+        body: { input, user_id: 1 },
+      })
+      .then((response) => {
+        setIsLoading(true);
+        navigation.navigate(screenNames.PROFILE_SCREEN);
+      })
+      .catch((error) => {
+        console.log(error.response.data);
+        setIsLoading(false);
+      });
   }
 
   function goToProfile() {
@@ -26,9 +47,21 @@ export default function NewTweetScreeen({ navigation }) {
         >
           Characters Left: {300 - input.length}
         </Text>
-        <TouchableOpacity style={styles.tweetButton} onPress={() => goToHome()}>
-          <Text style={[styles.tweetButtonText]}>Tweet</Text>
-        </TouchableOpacity>
+        <View style={styles.flexRow}>
+          {isLoading && (
+            <ActivityIndicator
+              size="small"
+              color="gray"
+              style={{ marginRight: 7 }}
+            />
+          )}
+          <TouchableOpacity
+            style={styles.tweetButton}
+            onPress={() => sendTweet()}
+          >
+            <Text style={[styles.tweetButtonText]}>Tweet</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <View style={[styles.p5, styles.flexRow]}>
         <TouchableOpacity onPress={() => goToProfile()}>

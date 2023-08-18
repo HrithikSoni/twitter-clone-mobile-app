@@ -1,21 +1,15 @@
 import {
   View,
-  Text,
   FlatList,
   StyleSheet,
-  Image,
   TouchableOpacity,
-  Platform,
   ActivityIndicator,
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import { EvilIcons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import { AntDesign } from "@expo/vector-icons";
-import { formatDistanceToNowStrict } from "date-fns";
-import locale from "date-fns/locale/en-US";
-import formatDistance from "../helpers/formateDateToNowStrict";
 import screenNames from "../constants/screenNames";
 import axiosConfig from "../helpers/axiosConfig";
+import RenItem from "../components/RenItem";
 
 const HomeScreen = ({ navigation }) => {
   const [data, setData] = useState("");
@@ -62,86 +56,9 @@ const HomeScreen = ({ navigation }) => {
     setPage(page + 1);
   }
 
-  const goToPRofile = () => {
-    navigation.navigate(screenNames.PROFILE_SCREEN);
-  };
-
-  const goToTweet = (tweetId) => {
-    navigation.navigate(screenNames.SINGLE_TWEET_SCREEN, {
-      tweetId: tweetId,
-    });
-  };
-
   const goToNewTweet = () => {
     navigation.navigate(screenNames.NEW_TWEET_SCREEN);
   };
-
-  const renderItem = ({ item: tweet }) => (
-    <View style={styles.tweetContainer}>
-      <TouchableOpacity onPress={() => goToPRofile()}>
-        <Image style={styles.avatar} source={{ uri: tweet.user.avatar }} />
-      </TouchableOpacity>
-      <View style={{ flex: 1 }}>
-        <TouchableOpacity style={styles.flexRow} onPress={() => goToPRofile()}>
-          <Text numberOfLines={1} style={styles.tweetName}>
-            {tweet.user.name}
-          </Text>
-          <Text numberOfLines={1} style={[styles.tweetHandle, styles.textGray]}>
-            @{tweet.user.username}
-          </Text>
-          <Text>&middot;</Text>
-          <Text numberOfLines={1} style={[styles.tweetHandle, styles.textGray]}>
-            {formatDistanceToNowStrict(new Date(tweet.created_at), {
-              locale: {
-                ...locale,
-                formatDistance,
-              },
-            })}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => goToTweet(tweet.id)}>
-          <Text style={styles.tweetText}>{tweet.body}</Text>
-        </TouchableOpacity>
-        <View style={styles.tweetEngCon}>
-          <TouchableOpacity style={[styles.flexRow, styles.tweetEngagement]}>
-            <EvilIcons
-              style={[{ marginRight: 2 }, styles.textGray]}
-              name="comment"
-              size={24}
-              color="black"
-            />
-            <Text style={styles.textGray}>300</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.flexRow, styles.tweetEngagement]}>
-            <EvilIcons
-              style={[{ marginRight: 2, marginLeft: 9 }, styles.textGray]}
-              name="retweet"
-              size={24}
-              color="black"
-            />
-            <Text style={styles.textGray}>300</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.flexRow, styles.tweetEngagement]}>
-            <EvilIcons
-              style={[{ marginRight: 2, marginLeft: 9 }, styles.textGray]}
-              name="heart"
-              size={24}
-              color="black"
-            />
-            <Text style={styles.textGray}>300</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.flexRow, styles.tweetEngagement]}>
-            <EvilIcons
-              style={[{ marginRight: 2, marginLeft: 9 }, styles.textGray]}
-              name={Platform.OS === "android" ? "share-google" : "share-apple"}
-              size={24}
-              color="black"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
@@ -150,7 +67,7 @@ const HomeScreen = ({ navigation }) => {
       ) : (
         <FlatList
           data={data}
-          renderItem={renderItem}
+          renderItem={(props) => <RenItem {...props} />}
           keyExtractor={(item) => item.id}
           ItemSeparatorComponent={() => (
             <View style={styles.tweetSeperator}></View>
@@ -180,41 +97,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "white",
-  },
-  tweetContainer: {
-    flexDirection: "row",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  avatar: {
-    height: 42,
-    width: 42,
-    borderRadius: 21,
-    marginRight: 9,
-  },
-  flexRow: {
-    flexDirection: "row",
-  },
-  tweetName: {
-    fontWeight: "bold",
-    color: "#222222",
-  },
-  tweetHandle: {
-    marginHorizontal: 9,
-  },
-  textGray: {
-    color: "gray",
-  },
-  tweetText: {
-    marginTop: 9,
-    lineHeight: 15,
-  },
-  tweetEngCon: {
-    flexDirection: "row",
-  },
-  tweetEngagement: {
-    marginTop: 9,
-    alignItems: "center",
   },
   tweetSeperator: {
     borderBottomWidth: 1,

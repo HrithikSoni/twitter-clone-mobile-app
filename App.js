@@ -11,7 +11,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <Drawer.Navigator>
-        <Drawer.Screen name="Home" component={HomeStackNavigator} />
+        <Drawer.Screen name="Home1" component={HomeStackNavigator} />
         <Drawer.Screen
           name={screenNames.SETTINGS_SCREEN}
           component={SettingsScreen}

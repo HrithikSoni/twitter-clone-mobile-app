@@ -1,5 +1,6 @@
 const screenNames = {
   // Screens
+  HOME1_SCREEN: "Home1",
   HOME_SCREEN: "Home",
   NEW_TWEET_SCREEN: "New Tweet",
   SINGLE_TWEET_SCREEN: "Tweet",

@@ -27,7 +27,6 @@ const TweetScreen = ({ route, navigation }) => {
       .get(`/tweets/${route.params.tweetId}`)
       .then((response) => {
         setTweet(response.data);
-        console.log(tweet);
         setIsLoading(false);
       })
       .catch((error) => {
@@ -36,9 +35,9 @@ const TweetScreen = ({ route, navigation }) => {
       });
   }
 
-  const goToProfile = () => {
+  function goToProfile() {
     navigation.navigate(screenNames.PROFILE_SCREEN);
-  };
+  }
 
   return (
     <View style={styles.container}>
@@ -48,7 +47,7 @@ const TweetScreen = ({ route, navigation }) => {
         <>
           <View style={[styles.flexRow, styles.spaceBetween]}>
             <View style={styles.flexRow}>
-              <TouchableOpacity onPress={() => goToProfile}>
+              <TouchableOpacity onPress={() => goToProfile()}>
                 <Image
                   style={styles.avatar}
                   source={{ uri: tweet.user.avatar }}
@@ -56,7 +55,7 @@ const TweetScreen = ({ route, navigation }) => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.tweetHandle}
-                onPress={() => goToProfile}
+                onPress={() => goToProfile()}
               >
                 <Text style={styles.tweetName}>{tweet.user.name}</Text>
                 <Text style={styles.textGray}>@{tweet.user.username}</Text>

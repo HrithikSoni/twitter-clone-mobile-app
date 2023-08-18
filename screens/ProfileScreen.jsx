@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axiosConfig from "../helpers/axiosConfig";
 import {
   View,
   Text,
@@ -7,58 +8,68 @@ import {
   TouchableOpacity,
   Linking,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
 import { EvilIcons } from "@expo/vector-icons";
+import RenItem from "../components/RenItem";
 
-export default function ProfileScreen() {
-  const DATA = [
-    {
-      id: "1",
-      title: "First Item",
-    },
-    {
-      id: "2",
-      title: "Second Item",
-    },
-    {
-      id: "3",
-      title: "Third Item",
-    },
-    {
-      id: "4",
-      title: "Fourth Item",
-    },
-    {
-      id: "5",
-      title: "Fifth Item",
-    },
-    {
-      id: "6",
-      title: "Sixth Item",
-    },
-    {
-      id: "7",
-      title: "Seventh Item",
-    },
-    {
-      id: "8",
-      title: "Eight Item",
-    },
-    {
-      id: "9",
-      title: "Ninth Item",
-    },
-    {
-      id: "10",
-      title: "Tenth Item",
-    },
-  ];
+export default function ProfileScreen({ route }) {
+  const [data, setData] = useState("");
+  const [userTweets, setUserTweets] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
 
-  const renderItem = ({ item }) => (
-    <View style={{ marginVertical: 20 }}>
-      <Text>{item.title}</Text>
-    </View>
-  );
+  useEffect(() => {
+    getUserProfile();
+    getUserTweets();
+  }, []);
+
+  function getUserProfile() {
+    axiosConfig
+      .get(`/users/${route.params.userId}`)
+      .then((response) => {
+        setData(response.data);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
+  function getUserTweets() {
+    axiosConfig
+      .get(`/users/${route.params.userId}/tweets?page=${page}`)
+      .then((response) => {
+        if (page === 1) {
+          setUserTweets(response.data.data);
+        } else {
+          setUserTweets([...data, ...response.data.data]);
+        }
+        setIsLoading(false);
+        setIsRefreshing(false);
+
+        if (!response.data.next_page_url) {
+          setIsAtEndOfScrolling(true);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+        setIsLoading(false);
+        setIsRefreshing(false);
+      });
+  }
+  function handleRefresh() {
+    setPage(1);
+    setIsAtEndOfScrolling(false);
+    setIsRefreshing(true);
+    getUserTweets();
+  }
+
+  function handleEnd() {
+    setPage(page + 1);
+  }
 
   const ProfileHeader = () => (
     <View style={styles.container}>
@@ -72,7 +83,7 @@ export default function ProfileScreen() {
         <Image
           style={styles.avatar}
           source={{
-            uri: "https://reactnative.dev/img/tiny_logo.png",
+            uri: data.avatar,
           }}
         />
         <TouchableOpacity style={styles.followButton}>
@@ -81,29 +92,26 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.nameContainer}>
-        <Text style={styles.profileName}>Andre Madarang</Text>
-        <Text style={styles.profileHandle}>@drehimself</Text>
+        <Text style={styles.profileName}>{data.name}</Text>
+        <Text style={styles.profileHandle}>@{data.username}</Text>
       </View>
 
       <View style={styles.profileContainer}>
-        <Text style={styles.profileContainerText}>
-          CEO of CEOs. PhD, MSc, SEO, HTML, CSS, JS Evangelist Pro Expert S Rank
-          Elite Best of the best.
-        </Text>
+        <Text style={styles.profileContainerText}>{data.profile}</Text>
       </View>
 
       <View style={styles.locationContainer}>
         <EvilIcons name="location" size={24} color="gray" />
-        <Text style={styles.textGray}>Toronto, Canada</Text>
+        <Text style={styles.textGray}>{data.location}</Text>
       </View>
 
       <View style={styles.linkContainer}>
         <TouchableOpacity
           style={styles.linkItem}
-          onPress={() => Linking.openURL("https://laracasts.com")}
+          onPress={() => Linking.openURL(data.link)}
         >
           <EvilIcons name="link" size={24} color="gray" />
-          <Text style={styles.linkColor}>laracasts.com</Text>
+          <Text style={styles.linkColor}>{data.linkText}</Text>
         </TouchableOpacity>
         <View style={[styles.linkItem, styles.ml4]}>
           <EvilIcons name="calendar" size={24} color="gray" />
@@ -127,14 +135,29 @@ export default function ProfileScreen() {
   );
 
   return (
-    <FlatList
-      style={styles.container}
-      data={DATA}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id}
-      ItemSeparatorComponent={() => <View style={styles.separator}></View>}
-      ListHeaderComponent={ProfileHeader}
-    />
+    <>
+      {isLoading ? (
+        <ActivityIndicator size="large" color="gray" />
+      ) : (
+        <FlatList
+          style={styles.container}
+          data={userTweets}
+          renderItem={(props) => <RenItem {...props} />}
+          keyExtractor={(item) => item.id.toString()}
+          ItemSeparatorComponent={() => <View style={styles.separator}></View>}
+          ListHeaderComponent={ProfileHeader}
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          onEndReached={handleEnd}
+          onEndReachedThreshold={0}
+          ListFooterComponent={() =>
+            !isAtEndOfScrolling && (
+              <ActivityIndicator size="large" color="gray" />
+            )
+          }
+        />
+      )}
+    </>
   );
 }
 
