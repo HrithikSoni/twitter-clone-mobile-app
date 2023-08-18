@@ -1,22 +1,14 @@
-import { NavigationContainer } from "@react-navigation/native";
-import "react-native-gesture-handler";
-import { createDrawerNavigator } from "@react-navigation/drawer";
-import SettingsScreen from "./screens/SettingsScreen";
-import screenNames from "./constants/screenNames";
-import { HomeStackNavigator } from "./Routes/HomeStackNavigator";
+import { View, Text } from "react-native";
+import React from "react";
+import { AuthProvider } from "./context/AuthContext";
+import Root from "./Root";
 
-const Drawer = createDrawerNavigator();
-
-export default function App() {
+const App = () => {
   return (
-    <NavigationContainer>
-      <Drawer.Navigator>
-        <Drawer.Screen name="Home1" component={HomeStackNavigator} />
-        <Drawer.Screen
-          name={screenNames.SETTINGS_SCREEN}
-          component={SettingsScreen}
-        />
-      </Drawer.Navigator>
-    </NavigationContainer>
+    <AuthProvider>
+      <Root />
+    </AuthProvider>
   );
-}
+};
+
+export default App;
