@@ -20,10 +20,15 @@ export default function ProfileScreen({ route }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
     getUserProfile();
     getUserTweets();
+  }, []);
+
+  useEffect(() => {
+    getIsFollowing();
   }, []);
 
   function getUserProfile() {
@@ -60,6 +65,37 @@ export default function ProfileScreen({ route }) {
         setIsRefreshing(false);
       });
   }
+
+  function getIsFollowing() {
+    axiosConfig
+      .get(`/is_following/${route.params.userId}`)
+      .then((response) => {
+        console.log(response.data);
+        setIsFollowing(response.data);
+      })
+      .catch((error) => console.log(error.response));
+  }
+
+  function unfollowUser() {
+    axiosConfig
+      .post(`/unfollow/${route.params.userId}`)
+      .then(
+        (response) => setIsFollowing(false),
+        alert("You have Unfollowed this user")
+      )
+      .catch((error) => console.log(error.response));
+  }
+
+  function followUser() {
+    axiosConfig
+      .post(`/follow/${route.params.userId}`)
+      .then(
+        (response) => setIsFollowing(true),
+        alert("You have followed this user")
+      )
+      .catch((error) => console.log(error.response));
+  }
+
   function handleRefresh() {
     setPage(1);
     setIsAtEndOfScrolling(false);
@@ -86,9 +122,23 @@ export default function ProfileScreen({ route }) {
             uri: data.avatar,
           }}
         />
-        <TouchableOpacity style={styles.followButton}>
-          <Text style={styles.followButtonText}>Follow</Text>
-        </TouchableOpacity>
+        <View>
+          {isFollowing ? (
+            <TouchableOpacity
+              style={styles.followButton}
+              onPress={() => unfollowUser()}
+            >
+              <Text style={styles.followButtonText}>Unfollow</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.followButton}
+              onPress={() => followUser()}
+            >
+              <Text style={styles.followButtonText}>Follow</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <View style={styles.nameContainer}>

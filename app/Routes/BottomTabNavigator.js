@@ -1,10 +1,11 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "../screens/HomeScreen";
-import SearchScreen from "../screens/SearchScreen";
-import NotificationScreen from "../screens/NotificationScreen";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import "react-native-gesture-handler";
 import screenNames from "../constants/screenNames";
+import { FontAwesome5 } from "@expo/vector-icons";
+import LoginUserProfileScreen from "../screens/LoginUserProfileScreen";
+import SearchScreen from "../screens/SearchScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -32,11 +33,11 @@ export const BottomTabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name={screenNames.NOTIFICATION_SCREEN}
-        component={NotificationScreen}
+        name={screenNames.LOGIN_USER_PROFILE_SCREEN}
+        component={LoginUserProfileScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="notifications" size={size} color={color} />
+            <FontAwesome5 name="user-circle" size={size} color={color} />
           ),
         }}
       />

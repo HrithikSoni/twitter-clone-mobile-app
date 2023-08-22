@@ -6,23 +6,38 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { TextInput } from "react-native-gesture-handler";
 import axiosConfig from "../helpers/axiosConfig";
 import screenNames from "../constants/screenNames";
+import { AuthContext } from "../context/AuthContext";
 
 export default function NewTweetScreeen({ navigation }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [input, setInput] = useState("");
+  const [tweet, setTweet] = useState("");
+
+  const { user } = useContext(AuthContext);
 
   function sendTweet() {
+    if (tweet.length === 0) {
+      Alert.alert("Please enter a tweet");
+      return;
+    }
+
+    setIsLoading(true);
+    axiosConfig.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${user.token}`;
     axiosConfig
       .post(`/tweets`, {
-        body: { input, user_id: 1 },
+        body: tweet,
       })
       .then((response) => {
-        setIsLoading(true);
-        navigation.navigate(screenNames.PROFILE_SCREEN);
+        console.log(screenNames.HOME_SCREEN);
+        navigation.navigate(screenNames.HOME_SCREEN, {
+          newTweetAdded: response.data,
+        });
+        setIsLoading(false);
       })
       .catch((error) => {
         console.log(error.response.data);
@@ -30,8 +45,10 @@ export default function NewTweetScreeen({ navigation }) {
       });
   }
 
-  function goToProfile() {
-    navigation.navigate("Profile");
+  function goToProfile(userId) {
+    navigation.navigate(screenNames.PROFILE_SCREEN, {
+      userId,
+    });
   }
 
   return (
@@ -41,11 +58,11 @@ export default function NewTweetScreeen({ navigation }) {
       >
         <Text
           style={[
-            input.length > 250 ? styles.textRed : styles.textGray,
+            tweet.length > 250 ? styles.textRed : styles.textGray,
             styles.p5,
           ]}
         >
-          Characters Left: {300 - input.length}
+          Characters Left: {300 - tweet.length}
         </Text>
         <View style={styles.flexRow}>
           {isLoading && (
@@ -58,22 +75,20 @@ export default function NewTweetScreeen({ navigation }) {
           <TouchableOpacity
             style={styles.tweetButton}
             onPress={() => sendTweet()}
+            disabled={isLoading}
           >
             <Text style={[styles.tweetButtonText]}>Tweet</Text>
           </TouchableOpacity>
         </View>
       </View>
       <View style={[styles.p5, styles.flexRow]}>
-        <TouchableOpacity onPress={() => goToProfile()}>
-          <Image
-            style={styles.avatar}
-            source={{ uri: "https://reactnative.dev/img/tiny_logo.png" }}
-          />
+        <TouchableOpacity onPress={() => goToProfile(user.id)}>
+          <Image style={styles.avatar} source={{ uri: user.avatar }} />
         </TouchableOpacity>
         <TextInput
           style={styles.textInput}
-          value={input}
-          onChangeText={setInput}
+          value={tweet}
+          onChangeText={setTweet}
           placeholder="What's Happening?"
           multiline
           placeholderTextColor="gray"

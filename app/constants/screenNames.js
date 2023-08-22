@@ -5,6 +5,7 @@ const screenNames = {
   NEW_TWEET_SCREEN: "New Tweet",
   SINGLE_TWEET_SCREEN: "Tweet",
   PROFILE_SCREEN: "Profile",
+  LOGIN_USER_PROFILE_SCREEN: "LoginUserProfileScreen",
 
   // Authentication Screens
   LOGIN_SCREEN: "LoginScreen",

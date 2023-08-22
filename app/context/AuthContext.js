@@ -1,12 +1,13 @@
 import React, { createContext, useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import axiosConfig from "../helpers/axiosConfig";
+import { set } from "date-fns";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   return (
@@ -36,10 +37,11 @@ export const AuthProvider = ({ children }) => {
               SecureStore.setItemAsync("user", JSON.stringify(userResponse));
               setError(null), setIsLoading(false);
             })
-            .catch((err) => {
-              console.log(err),
-                setError(err.response.data.message),
-                setIsLoading(false);
+            .catch((error) => {
+              console.log(error.response);
+              const key = Object.keys(error.response.data.errors)[0];
+              setError(error.response.data.errors[key][0]);
+              setIsLoading(false);
             });
         },
         logout: () => {

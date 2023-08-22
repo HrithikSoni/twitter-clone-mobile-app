@@ -1,30 +1,52 @@
-import {
-  View,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
-import { useEffect, useState } from "react";
-import { AntDesign } from "@expo/vector-icons";
+import { View, FlatList, StyleSheet, ActivityIndicator } from "react-native";
+import { useContext, useEffect, useState } from "react";
 import screenNames from "../constants/screenNames";
 import axiosConfig from "../helpers/axiosConfig";
 import RenItem from "../components/RenItem";
+import { AuthContext } from "../context/AuthContext";
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ route, navigation }) => {
   const [data, setData] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     getAllTweets();
   }, [page]);
 
-  function getAllTweets() {
+  useEffect(() => {
+    if (route.params?.newTweetAdded) {
+      getAllTweetsRefresh();
+    }
+  }, [route.params?.newTweetAdded]);
+
+  function getAllTweetsRefresh() {
+    setPage(1);
+    setIsAtEndOfScrolling(false);
+    setIsRefreshing(false);
+
     axiosConfig
-      .get(`/tweets/?page=${page}`)
+      .get(`/tweets_all`)
+      .then((response) => {
+        setData(response.data.data);
+        setIsLoading(false);
+        setIsRefreshing(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setIsLoading(false);
+        setIsRefreshing(false);
+      });
+  }
+
+  function getAllTweets() {
+    // console.log("Auth Token", `Bearer ${user.token}`);
+
+    axiosConfig
+      .get(`/tweets_all/?page=${page}`)
       .then((response) => {
         if (page === 1) {
           setData(response.data.data);
@@ -60,6 +82,10 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate(screenNames.NEW_TWEET_SCREEN);
   };
 
+  function gotoNewTweet() {
+    navigation.navigate(screenNames.NEW_TWEET_SCREEN);
+  }
+
   return (
     <View style={styles.container}>
       {isLoading ? (
@@ -83,12 +109,6 @@ const HomeScreen = ({ navigation }) => {
           }
         />
       )}
-      <TouchableOpacity
-        style={styles.floatingButton}
-        onPress={() => goToNewTweet()}
-      >
-        <AntDesign name="plus" size={24} color="black" />
-      </TouchableOpacity>
     </View>
   );
 };
@@ -101,17 +121,6 @@ const styles = StyleSheet.create({
   tweetSeperator: {
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
-  },
-  floatingButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#1d9bf1",
-    position: "absolute",
-    bottom: 20,
-    right: 12,
   },
 });
 
